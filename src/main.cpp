@@ -4,11 +4,11 @@
 #include <WiFiUdp.h>
 
 // WiFi credentials
-const char* ssid     = "";
-const char* password = "";
+const char* ssid     = "DARSHANPC 6092";
+const char* password = "4&721tB5";
 
 // UDP settings
-const char* serverIP = "";
+const char* serverIP = "192.168.137.1";
 const int serverPort = 9000;
 WiFiUDP udp;
 
@@ -17,7 +17,7 @@ WiFiUDP udp;
 
 // Timing
 unsigned long lastSend = 0;
-const int sendIntervalMs = 10; // 100 Hz
+const int sendIntervalMs = 100;
 
 void setup() {
   Serial.begin(115200);
@@ -71,6 +71,9 @@ void loop() {
   if (millis() - lastSend >= sendIntervalMs) {
     lastSend = millis();
 
+    // Capture timestamp at the moment of reading (32-bit unsigned long)
+    uint32_t timestamp = (uint32_t)millis();
+
     // Read raw MPU6050 data
     Wire.beginTransmission(MPU_ADDR);
     Wire.write(0x3B);
@@ -85,11 +88,11 @@ void loop() {
     int16_t gy = Wire.read() << 8 | Wire.read();
     int16_t gz = Wire.read() << 8 | Wire.read();
 
-    // Format and send UDP packet with raw values
+    // Format and send UDP packet with raw values and 32-bit timestamp
     char buf[128];
     snprintf(buf, sizeof(buf), 
-             "ax=%d,ay=%d,az=%d,gx=%d,gy=%d,gz=%d",
-             ax, ay, az, gx, gy, gz);
+             "ts=%lu,ax=%d,ay=%d,az=%d,gx=%d,gy=%d,gz=%d",
+             timestamp, ax, ay, az, gx, gy, gz);
 
     udp.beginPacket(serverIP, serverPort);
     udp.write((uint8_t*)buf, strlen(buf));
